@@ -2,7 +2,6 @@
 A Go module for wrapping WHOIS data within ease.
 
 ```go
-// Example usage
 package main
 
 import (
@@ -13,18 +12,21 @@ import (
 	"github.com/Z3NTL3/easywhois"
 )
 
+
 func main(){
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	defer cancel()
+	
 	client := new(easywhois.LookupClient)
 	client.Domain = "pix4.dev"
 
-	whois, err := client.Request(context.TODO(), time.Second * 5); if err != nil {
+	whois, err := client.Request(ctx, time.Second * 5); if err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	fmt.Printf("Domain: %s\r\n", whois.Domain.Domain)
-	fmt.Printf("Exp: %s\r\n", whois.Domain.ExpirationDate)
-	fmt.Printf("Registrar: %s\r\n", whois.Registrar.Email)
+	
+	fmt.Println(whois.Registrar.Name)
+	fmt.Println(whois.Domain.ExpirationDate)
 	// etc
 }
 ```

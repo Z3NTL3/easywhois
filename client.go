@@ -21,29 +21,24 @@ func (client LookupClient) Request(ctx context.Context, timeout time.Duration) (
 		whois.Port = 43
 	}
 
-	done := make(chan *WhoisResult, 2)
-
-	go func(){
-		res, err := whois.Whois(client.Domain, timeout, done)
-		if err != nil {
-			return
-		}
-		whois.Server = res.Domain.WhoisServer
-
-		// Reverse lookup against the parent responsible whois server
-		res, err = whois.Whois(client.Domain, timeout, done)
-		if err != nil {
-			return
-		}
-	}()
+	done := make(chan *whoisparser.WhoisInfo)
 	
+	defer func(){
+		close(done)
+	}()
 
-	for {
-		select {
-			case <-ctx.Done():
-				return dummy, ctx.Err()
-			case V := <-done:
-				return V, nil	
-		}
+
+   	go whois.Whois(client.Domain, timeout, done)
+	
+	select {
+		case <-ctx.Done():
+			return dummy, ctx.Err()
+		case V := <-done:
+			whois.Server = V.Domain.WhoisServer
+
+			// Reverse lookup against the parent responsible whois server
+			go whois.Whois(client.Domain, timeout, done)
+			res := <-done
+			return (*WhoisResult)(res), nil
 	}
 }
