@@ -5,6 +5,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/Z3NTL3/easywhois"
 	whoisparser "github.com/likexian/whois-parser"
 )
 
@@ -14,8 +15,8 @@ type WhoisContext struct {
 }
 
 func (c WhoisContext) Whois(
-	domain string, timeout time.Duration,
-) (*whoisparser.WhoisInfo, error) {
+	domain string, timeout time.Duration, done chan <-*easywhois.WhoisResult,
+)  {
 	dummy := new(whoisparser.WhoisInfo)
 	conn, err := net.DialTimeout(
 		"tcp",
@@ -23,7 +24,8 @@ func (c WhoisContext) Whois(
 		timeout,
 	)
 	if err != nil {
-		return dummy, err
+		done <- (*easywhois.WhoisResult)(dummy)
+		return
 	}
 	defer conn.Close()
 
@@ -34,7 +36,8 @@ func (c WhoisContext) Whois(
 
 	_, err = conn.Write([]byte(domain + "\r\n"))
 	if err != nil {
-		return dummy, err
+		done <- (*easywhois.WhoisResult)(dummy)
+		return
 	}
 
 	data := make([]byte, 0)
@@ -55,8 +58,10 @@ func (c WhoisContext) Whois(
 
 	whois, err := whoisparser.Parse(string(data))
 	if err != nil {
-		return dummy, err
+		done <- (*easywhois.WhoisResult)(dummy)
+		return
 	}
 
-	return &whois, nil
+	done <- (*easywhois.WhoisResult)(&whois)
+	return
 }
