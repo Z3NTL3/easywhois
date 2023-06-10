@@ -23,11 +23,7 @@ func (client LookupClient) Request(ctx context.Context, timeout time.Duration) (
 
 	done := make(chan *whoisparser.WhoisInfo)
 	
-	defer func(){
-		close(done)
-	}()
-
-
+	defer close(done)
    	go whois.Whois(client.Domain, timeout, done)
 	
 	select {
