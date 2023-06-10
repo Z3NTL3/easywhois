@@ -1,5 +1,5 @@
 # EasyWhois
-Go module, wraps WHOIS functionality with ease.
+A Go module for wrapping WHOIS data within ease.
 
 ```go
 // Example usage
