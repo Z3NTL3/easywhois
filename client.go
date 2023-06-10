@@ -8,7 +8,7 @@ import (
 	whoisparser "github.com/likexian/whois-parser"
 )
 
-type WhoisResult *whoisparser.WhoisInfo
+type WhoisResult whoisparser.WhoisInfo
 type LookupClient struct {
 	Domain string // Example: "pix4.dev"
 }
@@ -32,5 +32,5 @@ func (client LookupClient) Request(ctx context.Context, timeout time.Duration) (
 	if err != nil {
 		return dummy, err
 	}
-	return (*WhoisResult)(&res), nil
+	return (*WhoisResult)(res), nil
 }
